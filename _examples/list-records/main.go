@@ -22,7 +22,15 @@ func exitOnError(err error) {
 func main() {
 	user := os.Getenv("LOOPIA_USER")
 	password := os.Getenv("LOOPIA_PASSWORD")
-	zone := os.Getenv("ZONE")
+	var override, zone string
+	if len(os.Args) > 1 {
+		zone = os.Args[1]
+	}
+
+	if len(os.Args) > 2 {
+		override = os.Args[2]
+	}
+
 	if zone == "" {
 		fmt.Fprintf(os.Stderr, "ZONE not set\n")
 		os.Exit(1)
@@ -41,7 +49,7 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-	go show(ctx, &wg, zone, user, password)
+	go show(ctx, &wg, zone, user, password, override)
 
 	// Wait for SIGINT.
 	sig := make(chan os.Signal, 1)
@@ -55,12 +63,13 @@ func main() {
 	fmt.Println("Done!")
 }
 
-func show(ctx context.Context, wg *sync.WaitGroup, zone, user, password string) {
+func show(ctx context.Context, wg *sync.WaitGroup, zone, user, password, override string) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	p := &loopia.Provider{
-		Username: user,
-		Password: password,
+		Username:       user,
+		Password:       password,
+		OverrideDomain: override,
 	}
 	fmt.Println("getting records")
 	resAll, err := p.GetRecords(ctx, zone)

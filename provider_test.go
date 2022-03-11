@@ -37,8 +37,8 @@ func TestProvider_GetRecords(t *testing.T) {
 		want     []libdns.Record
 		wantErr  bool
 	}{
-		{"first", tc.getProvider(), args{context.TODO(), "test.local"}, getRecords(), false},
-		{"subdomain", tc.getProvider(), args{context.TODO(), "test.test.local"}, []libdns.Record{
+		{"first", tc.getProvider(""), args{context.TODO(), "test.local"}, getRecords(), false},
+		{"subdomain", tc.getProvider(""), args{context.TODO(), "test.test.local"}, []libdns.Record{
 			{ID: "1", Type: "TXT", Name: "_challenge", Value: "foo", TTL: 0},
 		}, false},
 		// TODO: Add test cases.
@@ -73,10 +73,10 @@ func TestProvider_AppendRecords(t *testing.T) {
 		want     []libdns.Record
 		wantErr  bool
 	}{
-		{"cdn", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{
+		{"cdn", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{
 			{Type: "TXT", Name: "_test", Value: "some text", TTL: time.Duration(5 * time.Minute)},
 		}}, []libdns.Record{{ID: "12345", Type: "TXT", Name: "_test", Value: "some text", TTL: 5 * time.Minute}}, false},
-		{"acme", tc.getProvider(),
+		{"acme", tc.getProvider(""),
 			args{
 				context.TODO(),
 				"test.test.local",
@@ -120,11 +120,11 @@ func TestProvider_SetRecords(t *testing.T) {
 		want     []libdns.Record
 		wantErr  bool
 	}{
-		{"nil records", tc.getProvider(), args{context.TODO(), "test.local", nil}, nil, true},
-		{"empty records", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{}}, nil, true},
-		{"invalid record", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{{Name: "www"}}}, nil, true},
-		{"invalid ID", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{{Name: "www", Type: "A", Value: "127.0.0.1", TTL: 5 * time.Minute}}}, nil, true},
-		{"valid record", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{{ID: "12345", Name: "www", Type: "A", Value: "127.0.0.1", TTL: 5 * time.Minute}}},
+		{"nil records", tc.getProvider(""), args{context.TODO(), "test.local", nil}, nil, true},
+		{"empty records", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{}}, nil, true},
+		{"invalid record", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{{Name: "www"}}}, nil, true},
+		{"invalid ID", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{{Name: "www", Type: "A", Value: "127.0.0.1", TTL: 5 * time.Minute}}}, nil, true},
+		{"valid record", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{{ID: "12345", Name: "www", Type: "A", Value: "127.0.0.1", TTL: 5 * time.Minute}}},
 			[]libdns.Record{{ID: "12345", Name: "www", Type: "A", Value: "127.0.0.1", TTL: 5 * time.Minute}}, false},
 		// TODO: Add test cases.
 	}
@@ -159,11 +159,11 @@ func TestProvider_DeleteRecords(t *testing.T) {
 		want     []libdns.Record
 		wantErr  bool
 	}{
-		{"invalid zone", tc.getProvider(), args{context.TODO(), "", nil}, nil, true},
-		{"nil records", tc.getProvider(), args{context.TODO(), "test.local", nil}, nil, true},
-		{"empty records", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{}}, nil, true},
-		{"no id records", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{{Name: "test", Type: "A"}}}, nil, true},
-		{"valid records", tc.getProvider(), args{context.TODO(), "test.local", []libdns.Record{{Name: "test", ID: "12345"}}}, []libdns.Record{{Name: "test", ID: "12345"}}, false},
+		{"invalid zone", tc.getProvider(""), args{context.TODO(), "", nil}, nil, true},
+		{"nil records", tc.getProvider(""), args{context.TODO(), "test.local", nil}, nil, true},
+		{"empty records", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{}}, nil, true},
+		{"no id records", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{{Name: "test", Type: "A"}}}, nil, true},
+		{"valid records", tc.getProvider(""), args{context.TODO(), "test.local", []libdns.Record{{Name: "test", ID: "12345"}}}, []libdns.Record{{Name: "test", ID: "12345"}}, false},
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {

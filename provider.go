@@ -12,15 +12,24 @@ import (
 // Provider facilitates DNS record manipulation with Loopia.
 type Provider struct {
 	client
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-	Customer string `json:"customer,omitempty"`
+	Username       string `json:"username,omitempty"`
+	Password       string `json:"password,omitempty"`
+	Customer       string `json:"customer,omitempty"`
+	OverrideDomain string `json:"override_domain,omitempty"`
+}
+
+func (p *Provider) override(zone string) string {
+	if p.OverrideDomain != "" {
+		return p.OverrideDomain
+	}
+	return zone
 }
 
 // GetRecords lists all the records in the zone.
 func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record, error) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
+	zone = p.override(zone)
 	n, z := loopify("", zone)
 	result, err := p.getZoneRecords(ctx, z)
 	if err != nil {
@@ -43,6 +52,7 @@ func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record
 func (p *Provider) AppendRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
+	zone = p.override(zone)
 	n, z := loopifyRecords(zone, records)
 	result, err := p.addDNSEntries(ctx, z, records)
 	unLoopifyRecords(n, result)
@@ -54,6 +64,7 @@ func (p *Provider) AppendRecords(ctx context.Context, zone string, records []lib
 func (p *Provider) SetRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
+	zone = p.override(zone)
 	hostSuffix, z := loopifyRecords(zone, records)
 	result, err := p.setDNSEntries(ctx, z, records)
 	unLoopifyRecords(hostSuffix, result)
@@ -64,6 +75,7 @@ func (p *Provider) SetRecords(ctx context.Context, zone string, records []libdns
 func (p *Provider) DeleteRecords(ctx context.Context, zone string, records []libdns.Record) ([]libdns.Record, error) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
+	zone = p.override(zone)
 	hostSuffix, z := loopifyRecords(zone, records)
 	result, err := p.removeDNSEntries(ctx, z, records)
 	unLoopifyRecords(hostSuffix, result)

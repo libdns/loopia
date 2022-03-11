@@ -20,7 +20,16 @@ func exitOnError(err error) {
 func main() {
 	user := os.Getenv("LOOPIA_USER")
 	password := os.Getenv("LOOPIA_PASSWORD")
-	zone := os.Getenv("ZONE")
+
+	var override, zone string
+	if len(os.Args) > 1 {
+		zone = os.Args[1]
+	}
+
+	if len(os.Args) > 2 {
+		override = os.Args[2]
+	}
+
 	if zone == "" {
 		fmt.Fprintf(os.Stderr, "ZONE not set\n")
 		os.Exit(1)
@@ -36,8 +45,9 @@ func main() {
 
 	fmt.Printf("zone: %s, user: %s\n", zone, user)
 	p := &loopia.Provider{
-		Username: user,
-		Password: password,
+		Username:       user,
+		Password:       password,
+		OverrideDomain: override,
 	}
 	ctx := context.TODO()
 	fmt.Println("appending")
@@ -49,7 +59,7 @@ func main() {
 	printRecords("after append", res)
 
 	fmt.Println("Will sleep for a few seconds...")
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 20)
 
 	resAll, err := p.GetRecords(ctx, zone)
 	exitOnError(err)

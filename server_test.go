@@ -37,8 +37,12 @@ type testContext struct {
 	server *httptest.Server
 }
 
-func (tc *testContext) getProvider() *Provider {
-	p := &Provider{}
+func (tc *testContext) getProvider(override string) *Provider {
+	p := &Provider{
+		Username:       "someuser@loopiaapi",
+		Password:       "sneeky password",
+		OverrideDomain: override,
+	}
 	p.rpc = tc.rpc
 	return p
 }
