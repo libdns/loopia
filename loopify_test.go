@@ -66,6 +66,7 @@ func Test_unLoopify(t *testing.T) {
 		{"complex-right-dot", args{"some", "lcl.example.org."}, "some", "lcl.example.org."},
 		{"a", args{"some.lcl", "example.org"}, "some", "lcl.example.org"},
 		{"b", args{"some.lcl", "example.org."}, "some", "lcl.example.org."},
+		{"wildcard", args{"*", "example.org"}, "*", "example.org"},
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {

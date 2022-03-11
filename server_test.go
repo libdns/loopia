@@ -17,7 +17,14 @@ var (
 	handlers map[string]methodHandler
 )
 
-type methodHandler func(t *testing.T, w http.ResponseWriter, params []string)
+type feedback struct {
+	method   string
+	params   []string
+	filename string
+	log      string
+}
+
+type methodHandler func(t *testing.T, fb *feedback, w http.ResponseWriter, params []string)
 
 func init() {
 	handlers = make(map[string]methodHandler)
@@ -31,8 +38,8 @@ func init() {
 }
 
 type testContext struct {
-	mux *http.ServeMux
-
+	mux    *http.ServeMux
+	fb     feedback
 	rpc    *xmlrpc.Client
 	server *httptest.Server
 }
@@ -48,7 +55,7 @@ func setupTest(t *testing.T) *testContext {
 	tc.mux = http.NewServeMux()
 	tc.server = httptest.NewServer(tc.mux)
 	tc.rpc, _ = xmlrpc.NewClient(tc.server.URL, nil)
-	tc.mux.HandleFunc("/", apiHandler(t))
+	tc.mux.HandleFunc("/", apiHandler(t, &tc.fb))
 	return tc
 }
 
@@ -58,7 +65,7 @@ func teardownTest(tc *testContext) {
 	}
 }
 
-func apiHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func apiHandler(t *testing.T, fb *feedback) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.Method, "POST")
@@ -76,65 +83,74 @@ func apiHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 		for _, v := range values {
 			strValues = append(strValues, v.FirstChild().Text)
 		}
-
+		*fb = feedback{method, strValues, "", ""}
 		h := handlers[method]
 		if h != nil {
-			h(t, w, strValues)
+			h(t, fb, w, strValues)
+			fb.method = method
 			return
 		}
+		fb.method = method
 		t.Errorf("method %s not implemented", method)
 		// byteArray, _ := ioutil.ReadFile("testdata/error.xml")
 		// fmt.Fprint(w, string(byteArray[:]))
 	}
 }
 
-func getSubdomainsHandler(t *testing.T, w http.ResponseWriter, params []string) {
+func getSubdomainsHandler(t *testing.T, fb *feedback, w http.ResponseWriter, params []string) {
 	// logger.Debug().Str("zone", params[3]).Msg("getSubdomainsHandler")
-	byteArray, _ := ioutil.ReadFile("testdata/subdomains.xml")
+	fb.filename = "testdata/subdomains.xml"
+	byteArray, _ := ioutil.ReadFile(fb.filename)
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
-func getZoneRecordsHandler(t *testing.T, w http.ResponseWriter, params []string) {
-
+func getZoneRecordsHandler(t *testing.T, fb *feedback, w http.ResponseWriter, params []string) {
 	recname := params[len(params)-1]
 	if recname == "*" {
 		recname = ""
 	}
-	filename := fmt.Sprintf("testdata/zone_records_%s.xml", recname)
-	_, err := os.Stat(filename)
+	fb.filename = fmt.Sprintf("testdata/zone_records_%s.xml", recname)
+	_, err := os.Stat(fb.filename)
 	if os.IsNotExist(err) {
-		filename = "testdata/empty_list.xml"
+		fb.log = fmt.Sprintf("missing file %s", fb.filename)
+		fb.filename = "testdata/empty_list.xml"
 	}
 	// logger.Debug().Str("zone", params[3]).Str("name", params[4]).Str("filename", filename).Msg("getZoneRecordsHandler")
-	byteArray, _ := ioutil.ReadFile(filename)
+	byteArray, _ := ioutil.ReadFile(fb.filename)
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
-func addSubdomainHandler(t *testing.T, w http.ResponseWriter, params []string) {
+func addSubdomainHandler(t *testing.T, fb *feedback, w http.ResponseWriter, params []string) {
 	//TODO: validate params
 	// fmt.Printf("params:%v", params)
-	fmt.Printf(" > addSubdomainHandler(%s, %s)\n", params[3], params[4])
+	domain := params[len(params)-2]
+	subdomain := params[len(params)-1]
+	fmt.Printf(" > addSubdomainHandler(%s, %s)\n", domain, subdomain)
 	assert.Len(t, params, 5)
 	assert.GreaterOrEqual(t, len(params[len(params)-1]), 1)
-	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
+	fb.filename = "testdata/ok.xml"
+	byteArray, _ := ioutil.ReadFile(fb.filename)
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
-func addZoneRecordHandler(t *testing.T, w http.ResponseWriter, params []string) {
+func addZoneRecordHandler(t *testing.T, fb *feedback, w http.ResponseWriter, params []string) {
 	// fmt.Printf(" > addZoneRecordHandler(%+v)\n", params[4:])
 	// logger.Debug().Str("name", params[4]).Str("value", params[7]).Msg("addZoneRecordHandler")
-	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
+	fb.filename = "testdata/ok.xml"
+	byteArray, _ := ioutil.ReadFile(fb.filename)
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
-func updateZoneRecordHandler(t *testing.T, w http.ResponseWriter, params []string) {
+func updateZoneRecordHandler(t *testing.T, fb *feedback, w http.ResponseWriter, params []string) {
 	// logger.Debug().Str("name", params[4]).Str("value", params[7]).Msg("updateZoneRecordHandler")
-	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
+	fb.filename = "testdata/ok.xml"
+	byteArray, _ := ioutil.ReadFile(fb.filename)
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
-func returnOkHandler(t *testing.T, w http.ResponseWriter, params []string) {
+func returnOkHandler(t *testing.T, fb *feedback, w http.ResponseWriter, params []string) {
 	// logger.Debug().Msg("returnOK Handler")
-	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
+	fb.filename = "testdata/ok.xml"
+	byteArray, _ := ioutil.ReadFile(fb.filename)
 	fmt.Fprint(w, string(byteArray[:]))
 }

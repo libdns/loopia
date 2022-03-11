@@ -37,9 +37,9 @@ func TestProvider_GetRecords(t *testing.T) {
 		want     []libdns.Record
 		wantErr  bool
 	}{
-		{"first", tc.getProvider(), args{context.TODO(), "test.local"}, getRecords(), false},
-		{"subdomain", tc.getProvider(), args{context.TODO(), "test.test.local"}, []libdns.Record{
-			{ID: "1", Type: "TXT", Name: "_challenge", Value: "foo", TTL: 0},
+		{"plain domain", tc.getProvider(), args{context.TODO(), "test.local"}, getRecords(), false},
+		{"with subdomain", tc.getProvider(), args{context.TODO(), "test.test.local"}, []libdns.Record{
+			{ID: "12345", Type: "TXT", Name: "", Value: "foo", TTL: time.Minute * 5},
 		}, false},
 		// TODO: Add test cases.
 	}
@@ -49,10 +49,12 @@ func TestProvider_GetRecords(t *testing.T) {
 			got, err := p.GetRecords(tt.args.ctx, tt.args.zone)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Provider.GetRecords() error = %v, wantErr %v", err, tt.wantErr)
+				t.Log(tc.fb)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Provider.GetRecords()\n got\t %v,\n want\t %v", got, tt.want)
+				t.Log(tc.fb)
 			}
 		})
 	}
@@ -95,10 +97,12 @@ func TestProvider_AppendRecords(t *testing.T) {
 			got, err := p.AppendRecords(tt.args.ctx, tt.args.zone, tt.args.records)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Provider.AppendRecords() error = %v, wantErr %v", err, tt.wantErr)
+				t.Log(tc.fb)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Provider.AppendRecords() = %v, want %v", got, tt.want)
+				t.Log(tc.fb)
 			}
 		})
 	}

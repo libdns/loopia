@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -19,10 +20,17 @@ func exitOnError(err error) {
 	}
 }
 
+var timeoutFlag = flag.Int("t", 20, "timeout in seconds")
+
 func main() {
 	user := os.Getenv("LOOPIA_USER")
 	password := os.Getenv("LOOPIA_PASSWORD")
 	zone := os.Getenv("ZONE")
+
+	if flag.NArg() > 0 {
+		zone = flag.Arg(0)
+	}
+
 	if zone == "" {
 		fmt.Fprintf(os.Stderr, "ZONE not set\n")
 		os.Exit(1)
@@ -40,7 +48,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeoutFlag))
 	go show(ctx, &wg, zone, user, password)
 
 	// Wait for SIGINT.

@@ -22,7 +22,9 @@ func (p *Provider) GetRecords(ctx context.Context, zone string) ([]libdns.Record
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	n, z := loopify("", zone)
-	result, err := p.getZoneRecords(ctx, z)
+	n = cleanSubdomain(n)
+
+	result, err := p.getZoneRecords(ctx, z, n)
 	if err != nil {
 		return result, err
 	}

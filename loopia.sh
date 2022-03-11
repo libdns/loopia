@@ -69,7 +69,7 @@ case $method in
         getit "$(request_subdomains $1)"
         ;;
     *)
-        echo -n "unknown"
+        echo -n "unknown command $method"
         ;;
 esac
 echo ""

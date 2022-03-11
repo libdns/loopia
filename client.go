@@ -37,6 +37,13 @@ func cleanZone(zone string) string {
 	return zone
 }
 
+func cleanSubdomain(s string) string {
+	if strings.HasPrefix(s, ".") {
+		s = strings.TrimPrefix(s, ".") //subdomain[1:]
+	}
+	return s
+}
+
 func validZone(zone string) bool {
 	if zone == "" || len(zone) < 4 {
 		return false
@@ -108,6 +115,18 @@ func (p *Provider) call(serviceMethod string, args []interface{}, reply interfac
 	)
 }
 
+// func (p *Provider) getSubdomains(ctx context.Context, zone string) ([]string, error) {
+// 	if !validZone(zone) {
+// 		return nil, fmt.Errorf("invalid zone '%s'", zone)
+// 	}
+// 	records := []string{}
+// 	err := p.call("getSubdomains", params(zone), &records)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("unexpected error getting subdomains: %w", err)
+// 	}
+// 	return records, err
+// }
+
 func (p *Provider) getRecords(ctx context.Context, zone, name string) ([]libdns.Record, error) {
 	if !validZone(zone) {
 		return nil, fmt.Errorf("invalid zone '%s'", zone)
@@ -175,16 +194,23 @@ func params(args ...interface{}) []interface{} {
 	return args
 }
 
-func (p *Provider) getZoneRecords(ctx context.Context, zone string) ([]libdns.Record, error) {
-	if !validZone(zone) {
-		return nil, fmt.Errorf("invalide zone '%s'", zone)
+func (p *Provider) getZoneRecords(ctx context.Context, domain, subdomain string) ([]libdns.Record, error) {
+	if !validZone(domain) {
+		return nil, fmt.Errorf("invalide zone '%s'", domain)
 	}
-	zone = cleanZone(zone)
+	domain = cleanZone(domain)
 	names := []string{}
-	err := p.call("getSubdomains", params(zone), &names)
-	if err != nil {
-		return nil, fmt.Errorf("unexpected error getting subdomains: %w", err)
+	args := params(domain)
+	var err error
+	if subdomain == "" {
+		err = p.call("getSubdomains", args, &names)
+		if err != nil {
+			return nil, fmt.Errorf("unexpected error getting subdomains: %w", err)
+		}
+	} else {
+		names = []string{subdomain}
 	}
+
 	result := []libdns.Record{}
 myloop:
 	for _, name := range names {
@@ -192,7 +218,7 @@ myloop:
 		case <-ctx.Done():
 			break myloop
 		default:
-			records, err := p.getRecords(ctx, zone, name)
+			records, err := p.getRecords(ctx, domain, name)
 			if err != nil {
 				return nil, fmt.Errorf("error getting zone records for %s: %w", name, err)
 			}
@@ -359,6 +385,6 @@ secondloop:
 			}
 		}
 	}
-	p.getZoneRecords(ctx, zone)
+	p.getZoneRecords(ctx, zone, "")
 	return result, nil
 }
