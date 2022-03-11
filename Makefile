@@ -4,6 +4,10 @@
 test: 
 	go test ./...
 
+.PHONY: cleantest
+cleantest:
+	go clean -testcache
+
 .PHONY: example
 example:
 	go run ./_examples/up-and-down
