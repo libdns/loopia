@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<methodResponse><fault><value><struct><member><name>faultCode</name><value><int>623</int></value></member><member><name>faultString</name><value><string>Calling parameters do not match signature</string></value></member></struct></value></fault></methodResponse>
