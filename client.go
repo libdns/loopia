@@ -96,7 +96,9 @@ func (p *Provider) call(serviceMethod string, args []interface{}, reply interfac
 	params := []interface{}{
 		p.Username,
 		p.Password,
-		p.Customer,
+	}
+	if p.Customer != "" {
+		params = append(params, p.Customer)
 	}
 	params = append(params, args...)
 	return p.getRpc().Call(

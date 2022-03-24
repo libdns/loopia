@@ -96,7 +96,7 @@ func getSubdomainsHandler(t *testing.T, w http.ResponseWriter, params []string) 
 
 func getZoneRecordsHandler(t *testing.T, w http.ResponseWriter, params []string) {
 
-	recname := params[4]
+	recname := params[len(params)-1] //last parameter
 	if recname == "*" {
 		recname = ""
 	}
@@ -115,7 +115,8 @@ func addSubdomainHandler(t *testing.T, w http.ResponseWriter, params []string) {
 	// fmt.Printf("params:%v", params)
 	fmt.Printf(" > addSubdomainHandler(%s, %s)\n", params[3], params[4])
 	assert.Len(t, params, 5)
-	assert.GreaterOrEqual(t, len(params[4]), 1)
+	lastp := params[len(params)-1]
+	assert.GreaterOrEqual(t, len(lastp), 1)
 	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
 	fmt.Fprint(w, string(byteArray[:]))
 }
