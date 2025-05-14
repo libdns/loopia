@@ -2,6 +2,7 @@ package loopia
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -62,7 +63,7 @@ func apiHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, r.Method, "POST")
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		assert.NoError(t, err, "Error reading request body")
 		strBody := string(body)
 		doc := xmldom.Must(xmldom.ParseXML(strBody))
@@ -71,7 +72,7 @@ func apiHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 		method := root.GetChild("methodName").Text
 		params := root.GetChild("params")
 		values := params.Query("//value")
-		// logger.Debug().Str("method", method).Int("values", len(values)).Msg("request")
+
 		strValues := []string{}
 		for _, v := range values {
 			strValues = append(strValues, v.FirstChild().Text)
@@ -89,8 +90,7 @@ func apiHandler(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSubdomainsHandler(t *testing.T, w http.ResponseWriter, params []string) {
-	// logger.Debug().Str("zone", params[3]).Msg("getSubdomainsHandler")
-	byteArray, _ := ioutil.ReadFile("testdata/subdomains.xml")
+	byteArray, _ := os.ReadFile("testdata/subdomains.xml")
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
@@ -105,37 +105,31 @@ func getZoneRecordsHandler(t *testing.T, w http.ResponseWriter, params []string)
 	if os.IsNotExist(err) {
 		filename = "testdata/empty_list.xml"
 	}
-	// logger.Debug().Str("zone", params[3]).Str("name", params[4]).Str("filename", filename).Msg("getZoneRecordsHandler")
-	byteArray, _ := ioutil.ReadFile(filename)
+
+	byteArray, _ := os.ReadFile(filename)
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
 func addSubdomainHandler(t *testing.T, w http.ResponseWriter, params []string) {
-	//TODO: validate params
-	// fmt.Printf("params:%v", params)
 	fmt.Printf(" > addSubdomainHandler(%s, %s)\n", params[3], params[4])
 	assert.Len(t, params, 5)
 	lastp := params[len(params)-1]
 	assert.GreaterOrEqual(t, len(lastp), 1)
-	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
+	byteArray, _ := os.ReadFile("testdata/ok.xml")
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
 func addZoneRecordHandler(t *testing.T, w http.ResponseWriter, params []string) {
-	// fmt.Printf(" > addZoneRecordHandler(%+v)\n", params[4:])
-	// logger.Debug().Str("name", params[4]).Str("value", params[7]).Msg("addZoneRecordHandler")
-	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
+	byteArray, _ := os.ReadFile("testdata/ok.xml")
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
 func updateZoneRecordHandler(t *testing.T, w http.ResponseWriter, params []string) {
-	// logger.Debug().Str("name", params[4]).Str("value", params[7]).Msg("updateZoneRecordHandler")
 	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
 	fmt.Fprint(w, string(byteArray[:]))
 }
 
 func returnOkHandler(t *testing.T, w http.ResponseWriter, params []string) {
-	// logger.Debug().Msg("returnOK Handler")
-	byteArray, _ := ioutil.ReadFile("testdata/ok.xml")
+	byteArray, _ := os.ReadFile("testdata/ok.xml")
 	fmt.Fprint(w, string(byteArray[:]))
 }

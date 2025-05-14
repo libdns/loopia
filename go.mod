@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b
-	github.com/libdns/libdns v0.2.1
+	github.com/libdns/libdns v1.0.0
 	github.com/stretchr/testify v1.8.0
 	github.com/subchen/go-xmldom v1.1.2
 )

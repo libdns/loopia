@@ -33,8 +33,14 @@ func main() {
 	if password == "" {
 		exitOnError(fmt.Errorf("password is not set"))
 	}
+	host := "test.app"
+	if len(os.Args) > 1 && os.Args[1] != "" {
+		host = os.Args[1]
+	}
 
-	fmt.Printf("zone: %s, user: %s\n", zone, user)
+	name := "_acme-challenge." + host
+
+	fmt.Printf("zone: %s, user: %s, host: %s\n", zone, user, host)
 	p := &loopia.Provider{
 		Username: user,
 		Password: password,
@@ -43,7 +49,7 @@ func main() {
 	fmt.Println("appending")
 	res, err := p.AppendRecords(ctx, zone,
 		[]libdns.Record{
-			{Name: "_acme-challenge.test", Type: "TXT", Value: "Zgu7tw287LB-LpXyTHYLeROag9-4CLHnM77zvTEvH6o"},
+			libdns.TXT{Name: name, Text: "Zgu7tw287LB-LpXyTHYLeROag9-4CLHnM77zvTEvH6o"},
 		})
 	exitOnError(err)
 	printRecords("after append", res)
